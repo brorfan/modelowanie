@@ -2,15 +2,18 @@ import numpy as np
 import tkinter as tk
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.widgets import Slider
+from matplotlib.widgets import Slider, RadioButtons
+import sympy as sp
 
 # Dane katalogowe
-n_szkla = 1.5
-n_wody = 1.33
-n_lodu = 1.37
-n_topionego_kwarcu = 1.46
-n_diamentu = 2.417
-n_powietrza = 1.0003
+materials = {
+    "Szkło": 1.5,
+    "Woda": 1.33,
+    "Lód": 1.37,
+    "Topiony kwarc": 1.46,
+    "Diament": 2.417,
+}
+n_Powietrze = 1.0003
 
 # Przygotowanie wykresu
 fig, ax = plt.subplots()
@@ -27,7 +30,7 @@ ax.set_title(
 
 # Ustawienie rozmiarów okna
 dpi = 100  # Dots per inch (wspolczynnik zamiany pikseli na inches)
-fig.set_size_inches(950 / dpi, 580 / dpi)
+fig.set_size_inches(1000 / dpi, 580 / dpi)
 
 ax.set_xlim(-9, 9)
 ax.set_ylim(-5, 5)
@@ -40,7 +43,7 @@ ax.axis('off')  # opcja włączenia i wyłączenia osi X i Y
 
 # right lens
 centerA = (0, 0)  # center coordinates
-radiusA = 2  # radius of the circle (right side of the lens)
+radiusA = 3  # radius of the circle (right side of the lens)
 angleA = 180  # angle range in degrees (from 0 to 360)
 thetaA = 90  # starting angle for the arc
 widthA = radiusA  # width of the arc
@@ -48,7 +51,7 @@ heightA = 10  # height of the arc
 
 # left lens
 centerB = (0, 0)
-radiusB = 1
+radiusB = 2
 angleB = 180
 thetaB = -90
 widthB = radiusB
@@ -68,7 +71,8 @@ lines_length = centerA[0] + (max(abs(widthA), abs(widthB)) / 2)
 fixed_centerA = (centerA[0] + (widthR / 2), centerA[1])
 fixed_centerB = (centerB[0] - (widthR / 2), centerB[1])
 
-plt.scatter(fixed_centerB, fixed_centerA, color='blue')
+plt.scatter(fixed_centerB[0], fixed_centerB[1], color='blue')
+plt.scatter(fixed_centerA[0], fixed_centerA[1], color='purple')
 
 arcA = patches.Arc(fixed_centerA, widthA, heightA, angle=angleA, theta1=thetaA, theta2=thetaA + angleA,
                    edgecolor='black', linewidth=2, facecolor='white')
@@ -138,27 +142,80 @@ amplitude_slider = Slider(
     orientation="vertical"
 )
 
+red_normal_line = None
+
+# tworzenie normalnej bazujac na punktach przeciecia i elipsy
+def normal_line_equation(a, b, x0, y0):
+    # Calculate the derivative of the ellipse at (x0, y0)
+    x, y = sp.symbols('x y')
+
+    # Equation of the ellipse
+    ellipse_eq = (x ** 2 / a ** 2) + (y ** 2 / b ** 2) - 1
+
+    # Derivative of ellipse equation with respect to x (dy/dx)
+    dy_dx = sp.diff(ellipse_eq, x) / sp.diff(ellipse_eq, y)
+
+    # Evaluate the derivative (dy/dx) at (x0, y0)
+    slope_tangent = float(dy_dx.subs({x: x0, y: y0}))
+
+    # The slope of the normal line is the negative reciprocal of the tangent slope
+    slope_normal = -1 / slope_tangent if slope_tangent != 0 else float('inf')
+
+    # Equation of the normal line at (x0, y0)
+    # y - y0 = slope_normal * (x - x0)
+    return - slope_normal, y0 + slope_normal * x0
+
+
 # Function to remove the line
 def remove_line():
-    global hline
-    if hline:  # Check if the line exists
-        hline.remove()  # Remove the line
+    global hline, red_normal_line
+    if hline:  # Check if the blue horizontal line exists
+        hline.remove()  # Remove the blue line
         hline = None  # Reset the reference
+
+    if red_normal_line:  # Check if the red normal line exists
+        red_normal_line.remove()  # Remove the red normal line
+        red_normal_line = None  # Reset the reference
 
 # Function to redraw the line
 def redraw_line(y_value):
-    global hline
+    global hline, red_normal_line
     hline = ax.axhline(y=y_value, color='blue', linestyle='-', label=f"y = {y_value}")
-    fig.canvas.draw_idle()  # Refresh the figure
+
+    # Elipse parameters
+    x_0, y_0 = fixed_centerB[0], fixed_centerB[1]
+    a, b = radiusB / 2, 5
+    line = (0, y_value)  # Horizontal line equation
+
+    # Get intersection points with ellipse
+    points = intersection_with_ellipse(x_0, y_0, a, b, line)
+
+    if points:
+        point_x, point_y = points[0][0], points[0][1]
+
+        # Get the slope and equation of the normal line
+        slope_normal, y_intercept = normal_line_equation(a, b, point_x, point_y)
+
+        # Create x values around the intersection point to plot the normal line
+        x_values = np.linspace(point_x - 5, point_x + 5, 100)
+
+        # Calculate corresponding y values of the normal line
+        y_values = slope_normal * x_values + y_intercept
+
+        # Plot the normal line (store the plot object)
+        red_normal_line, = ax.plot(x_values, y_values, color='red', label="Normal Line")
+
+    fig.canvas.draw_idle()  # Redraw the plot
 
 # Update function for the slider
 def update(val):
     slider_value = amplitude_slider.val  # Get the slider value
-    remove_line()  # Remove the old line
+    remove_line()  # Remove the old lines (both blue and red)
     redraw_line(slider_value)  # Redraw the line at the new slider value
 
 # Connect the slider to the update function
 amplitude_slider.on_changed(update)
+
 
 # Wybór materiału soczewki
 
@@ -183,5 +240,34 @@ radio = RadioButtons(radio_ax, labels=list(materials.keys()))  # Utwórz RadioBu
 
 # Podłącz funkcję aktualizacji do RadioButtons
 radio.on_clicked(update_dot)
+
+#-----------------------------------------------------------
+def intersection_with_ellipse(x_0, y_0, a, b, line):
+    # Tworzymy zmienne symboliczne
+    x, y = sp.symbols('x y')
+
+    # Równanie elipsy
+    ellipse_eq = ((x - x_0) ** 2 / a ** 2) + ((y - y_0) ** 2 / b ** 2) - 1
+
+    # Rozkład równania prostej w postaci y = mx + c
+    m, c = line
+
+    # Podstawiamy równanie prostej do równania elipsy
+    ellipse_eq_sub = ellipse_eq.subs(y, m * x + c)
+
+    # Rozwiązujemy równanie dla x
+    solutions_x = sp.solve(ellipse_eq_sub, x)
+
+    # Obliczamy odpowiednie y dla punktów x
+    points = []
+    for sol_x in solutions_x:
+        sol_y = m * sol_x + c
+        points.append((sol_x, sol_y))
+
+    return points
+
+
+
+
 
 plt.show()
