@@ -160,4 +160,28 @@ def update(val):
 # Connect the slider to the update function
 amplitude_slider.on_changed(update)
 
+# Wybór materiału soczewki
+
+# Ustawienia wykresu
+x = list(range(len(materials)))  # Indeksy dla materiałów (0, 1, 2, ...)
+y = list(materials.values())  # Wartości n dla każdego materiału
+selected_dot, = ax.plot([], [], 'ro', markersize=10)  # Kropka oznaczająca wybór
+
+def n(n_1, n_2):
+    return n_2 / n_1
+
+# Funkcja aktualizująca zaznaczenie kropki
+def update_dot(label):
+    material_list = list(materials.keys())  # Konwertowanie dict_keys do listy
+    index = material_list.index(label)  # Indeks wybranego materiału
+    wsp_odbicia = n(n_1=n_Powietrze, n_2=materials[index])
+    fig.canvas.draw_idle()  # Odśwież wykres
+
+# RadioButtons
+radio_ax = plt.axes([0.8, 0.1, 0.15, 0.3])  # Pozycja widżetu (x, y, szerokość, wysokość)
+radio = RadioButtons(radio_ax, labels=list(materials.keys()))  # Utwórz RadioButtons
+
+# Podłącz funkcję aktualizacji do RadioButtons
+radio.on_clicked(update_dot)
+
 plt.show()
