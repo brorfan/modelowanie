@@ -20,12 +20,12 @@ fig, ax = plt.subplots()
 
 ax.set_title(
     "SYMULACJA WIĄZKI ŚWIATŁA PRZEZ SOCZEWĘ",  # Tytuł
-    fontsize=18,      # Rozmiar czcionki
+    fontsize=18,  # Rozmiar czcionki
     fontweight='bold',
     color='darkblue',  # Kolor
-    style='oblique',    # Styl
-    loc='center',      # Pozycja
-    pad=20             # Padding
+    style='oblique',  # Styl
+    loc='center',  # Pozycja
+    pad=20  # Padding
 )
 
 # Ustawienie rozmiarów okna
@@ -34,7 +34,7 @@ fig.set_size_inches(1000 / dpi, 580 / dpi)
 
 ax.set_xlim(-9, 9)
 ax.set_ylim(-5, 5)
-line_y = 0 # oś OX
+line_y = 0  # oś OX
 ax.axhline(y=line_y, color='purple', linestyle='--', label=f"y = {line_y}")
 
 ax.set_aspect('equal')  # both axes are equal in proportion (i think?)
@@ -124,7 +124,6 @@ elif radiusA == 0:
     elif radiusB == 0:
         line_left = plt.vlines(lines_start, lineA_height, lineB_height, colors='black', linestyles='solid', linewidth=2)
 
-
 plt.axis('equal')
 hline = ax.axhline(y=line_y, color='blue', linestyle='-', label=f"y = {line_y}")
 
@@ -144,19 +143,20 @@ amplitude_slider = Slider(
 
 red_normal_line = None
 
+
 # tworzenie normalnej bazujac na punktach przeciecia i elipsy
 def normal_line_equation(a, b, x0, y0):
     # Calculate the derivative of the ellipse at (x0, y0)
-    x, y = sp.symbols('x y')
+    z, w = sp.symbols('z w')
 
     # Equation of the ellipse
-    ellipse_eq = (x ** 2 / a ** 2) + (y ** 2 / b ** 2) - 1
+    ellipse_eq = (z ** 2 / a ** 2) + (w ** 2 / b ** 2) - 1
 
     # Derivative of ellipse equation with respect to x (dy/dx)
-    dy_dx = sp.diff(ellipse_eq, x) / sp.diff(ellipse_eq, y)
+    dy_dx = sp.diff(ellipse_eq, z) / sp.diff(ellipse_eq, w)
 
     # Evaluate the derivative (dy/dx) at (x0, y0)
-    slope_tangent = float(dy_dx.subs({x: x0, y: y0}))
+    slope_tangent = float(dy_dx.subs({z: x0, w: y0}))
 
     # The slope of the normal line is the negative reciprocal of the tangent slope
     slope_normal = -1 / slope_tangent if slope_tangent != 0 else float('inf')
@@ -176,6 +176,7 @@ def remove_line():
     if red_normal_line:  # Check if the red normal line exists
         red_normal_line.remove()  # Remove the red normal line
         red_normal_line = None  # Reset the reference
+
 
 # Function to redraw the line
 def redraw_line(y_value):
@@ -207,15 +208,16 @@ def redraw_line(y_value):
 
     fig.canvas.draw_idle()  # Redraw the plot
 
+
 # Update function for the slider
 def update(val):
     slider_value = amplitude_slider.val  # Get the slider value
     remove_line()  # Remove the old lines (both blue and red)
     redraw_line(slider_value)  # Redraw the line at the new slider value
 
+
 # Connect the slider to the update function
 amplitude_slider.on_changed(update)
-
 
 # Wybór materiału soczewki
 
@@ -224,8 +226,10 @@ x = list(range(len(materials)))  # Indeksy dla materiałów (0, 1, 2, ...)
 y = list(materials.values())  # Wartości n dla każdego materiału
 selected_dot, = ax.plot([], [], 'ro', markersize=10)  # Kropka oznaczająca wybór
 
+
 def n(n_1, n_2):
     return n_2 / n_1
+
 
 # Funkcja aktualizująca zaznaczenie kropki
 def update_dot(label):
@@ -234,6 +238,7 @@ def update_dot(label):
     wsp_odbicia = n(n_1=n_Powietrze, n_2=materials[index])
     fig.canvas.draw_idle()  # Odśwież wykres
 
+
 # RadioButtons
 radio_ax = plt.axes([0.8, 0.1, 0.15, 0.3])  # Pozycja widżetu (x, y, szerokość, wysokość)
 radio = RadioButtons(radio_ax, labels=list(materials.keys()))  # Utwórz RadioButtons
@@ -241,22 +246,23 @@ radio = RadioButtons(radio_ax, labels=list(materials.keys()))  # Utwórz RadioBu
 # Podłącz funkcję aktualizacji do RadioButtons
 radio.on_clicked(update_dot)
 
-#-----------------------------------------------------------
+
+# -----------------------------------------------------------
 def intersection_with_ellipse(x_0, y_0, a, b, line):
     # Tworzymy zmienne symboliczne
-    x, y = sp.symbols('x y')
+    z, w = sp.symbols('z w')
 
     # Równanie elipsy
-    ellipse_eq = ((x - x_0) ** 2 / a ** 2) + ((y - y_0) ** 2 / b ** 2) - 1
+    ellipse_eq = ((z - x_0) ** 2 / a ** 2) + ((w - y_0) ** 2 / b ** 2) - 1
 
     # Rozkład równania prostej w postaci y = mx + c
     m, c = line
 
     # Podstawiamy równanie prostej do równania elipsy
-    ellipse_eq_sub = ellipse_eq.subs(y, m * x + c)
+    ellipse_eq_sub = ellipse_eq.subs(w, m * z + c)
 
     # Rozwiązujemy równanie dla x
-    solutions_x = sp.solve(ellipse_eq_sub, x)
+    solutions_x = sp.solve(ellipse_eq_sub, z)
 
     # Obliczamy odpowiednie y dla punktów x
     points = []
@@ -265,9 +271,6 @@ def intersection_with_ellipse(x_0, y_0, a, b, line):
         points.append((sol_x, sol_y))
 
     return points
-
-
-
 
 
 plt.show()
