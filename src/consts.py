@@ -7,3 +7,9 @@ MATERIALS = {
 }
 n_Powietrze = 1.0003
 DPI = 100  # Dots per inch (wspolczynnik zamiany pikseli na inches)
+
+# Prezentacja ma polegać na:
+# - wprowadzeniu teoretycznym (prawo Snella i wyprowadzenie wzorow na proste zakrzywione)
+# - prezentacja programu
+# - prezentacja kodu
+
