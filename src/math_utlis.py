@@ -3,6 +3,7 @@ import sympy as sp
 
 from consts import n_Powietrze, MATERIALS
 
+
 def normal_line_equation(a, b, x0, y0):
     # Calculate the derivative of the ellipse at (x0, y0)
     z, w = sp.symbols('z w')
@@ -13,8 +14,11 @@ def normal_line_equation(a, b, x0, y0):
     # Derivative of ellipse equation with respect to x (dy/dx)
     dy_dx = sp.diff(ellipse_eq, z) / sp.diff(ellipse_eq, w)
 
-    # Evaluate the derivative (dy/dx) at (x0, y0)
-    slope_tangent = float(dy_dx.subs({z: x0, w: y0}))
+    if y0 == 0:
+        slope_tangent = float('inf')  # The tangent at (x0, 0) is vertical (infinite slope)
+    else:
+        # Evaluate the derivative for other points
+        slope_tangent = float(dy_dx.subs({z: x0, w: y0}))  # Example: a = 1, b = 1
 
     # The slope of the normal line is the negative reciprocal of the tangent slope
     slope_normal = -1 / slope_tangent if slope_tangent != 0 else float('inf')
@@ -92,7 +96,8 @@ def remove_line(plot_elements):
         plot_elements['purple_end_line'] = None  # Reset the reference
 
 
-def redraw_line(fig, ax, y_value, fixed_center_left, fixed_center_right, radius_left, radius_right, plot_elements, radio_buttons):
+def redraw_line(fig, ax, y_value, fixed_center_left, fixed_center_right, radius_left, radius_right, plot_elements,
+                radio_buttons):
     # PRAMATERES ---------------------------------
     hline = (0, y_value)  # Horizontal line equation
     selected_label = radio_buttons.value_selected
@@ -106,6 +111,7 @@ def redraw_line(fig, ax, y_value, fixed_center_left, fixed_center_right, radius_
     point_x, point_y = points[0][0], points[0][1]
 
     # 1st normal line in the 1st intersection point
+    print(a1, b1, point_x, point_y)
     slope_1st_normal, b_1st_normal = normal_line_equation(a1, b1, point_x, point_y)
 
     # 2nd Elipse parameters

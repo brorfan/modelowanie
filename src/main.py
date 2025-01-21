@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, RadioButtons
+from matplotlib.widgets import Slider, RadioButtons, TextBox
 
 from consts import MATERIALS, DPI
 
-from lens import Lens, create_lens
+from lens import Lens, create_lens, delete_lens
 from math_utlis import remove_line, redraw_line
 
 fig, ax = plt.subplots()
@@ -48,15 +48,8 @@ width_r = max(abs(lens_right.width), abs(lens_left.width))
 fixed_center_right = (lens_right.center[0] + (width_r / 2), lens_right.center[1])
 fixed_center_left = (lens_left.center[0] - (width_r / 2), lens_left.center[1])
 
-# draws the centers of the eliptic figures
-# plt.scatter(fixed_center_left[0], fixed_center_left[1], color='blue')
-# plt.scatter(fixed_center_right[0], fixed_center_right[1], color='purple')
-
-# line_left = plt.vlines(lines_start, lineA_height, lineB_height, colors='black', linestyles='solid', linewidth=2)
-
-# line_right = plt.vlines(lines_length, lineA_height, lineB_height, colors='black', linestyles='solid', linewidth=2)
-
-create_lens(fixed_center_right, fixed_center_left, ax, width_r, lens_right, lens_left)
+# plotting the lens and returning array with created objects used later to delete the lens
+created_objects = create_lens(fixed_center_right, fixed_center_left, ax, width_r, lens_right, lens_left)
 plot_elements['hline'] = ax.axhline(y=line_y, color='blue', linestyle='-', label=f"y = {line_y}")
 
 plt.axis('equal')
@@ -79,21 +72,50 @@ amplitude_slider = Slider(
 radio_ax = plt.axes((0.8, 0.1, 0.15, 0.3))  # Pozycja widżetu (x, y, szerokość, wysokość)
 radio = RadioButtons(radio_ax, labels=list(MATERIALS.keys()))  # Utwórz RadioButtons
 
+# Create radius inputs
+input_left_ax = plt.axes((0.9, 0.7, 0.05, 0.04))  # [x, y, width, height]
+input_left = TextBox(input_left_ax, 'Promień lewej soczewki: \n (Wartości od -10 do 10)  '
+                                    '', lens_left.radius, color='1', hovercolor='0.9')
+input_right_ax = plt.axes((0.9, 0.62, 0.05, 0.04))  # [x, y, width, height]
+input_right = TextBox(input_right_ax, 'Promień prawej soczewki: \n (Wartości od -10 do 10)  ', lens_right.radius, color='1', hovercolor='0.9')
+
+
 # Funkcja aktualizująca
 def actualisation(label):
+    global created_objects, width_r, fixed_center_left, fixed_center_right
     slider_value = amplitude_slider.val
+
+    # all data changing with lens radius
+    lens_left.radius = float(input_left.text)
+    lens_left.width = float(input_left.text)
+    lens_right.radius = float(input_right.text)
+    lens_right.width = float(input_right.text)
+    width_r = max(abs(lens_right.width), abs(lens_left.width))
+    fixed_center_right = (lens_right.center[0] + (width_r / 2), lens_right.center[1])
+    fixed_center_left = (lens_left.center[0] - (width_r / 2), lens_left.center[1])
+
     print(f"Selected Label: {label}")
+    delete_lens(ax, created_objects)
+    created_objects = create_lens(fixed_center_right, fixed_center_left, ax, width_r, lens_right, lens_left)
     remove_line(plot_elements)
-    redraw_line(fig, ax, slider_value, fixed_center_left, fixed_center_right, lens_left.radius, lens_right.radius, plot_elements, radio)
+    redraw_line(fig, ax, slider_value, fixed_center_left, fixed_center_right, lens_left.radius, lens_right.radius,
+                plot_elements, radio)
+
 
 # Podłącz funkcję aktualizacji do RadioButtons
 radio.on_clicked(actualisation)
+
+# add text boxes to actualisation function
+input_left.on_submit(actualisation)
+input_right.on_submit(actualisation)
+
 
 # Update function for the slider
 def update(val):
     slider_value = amplitude_slider.val  # Get the slider value
     remove_line(plot_elements)  # Remove the old lines (both blue and red and green)
-    redraw_line(fig, ax, slider_value, fixed_center_left, fixed_center_right, lens_left.radius, lens_right.radius, plot_elements, radio)  # Redraw the line at the new slider value
+    redraw_line(fig, ax, slider_value, fixed_center_left, fixed_center_right, lens_left.radius, lens_right.radius,
+                plot_elements, radio)  # Redraw the line at the new slider value
 
 
 # Connect the slider to the update function
@@ -103,8 +125,5 @@ amplitude_slider.on_changed(update)
 x = list(range(len(MATERIALS)))  # Indeksy dla materiałów (0, 1, 2, ...)
 y = list(MATERIALS.values())  # Wartości n dla każdego materiału
 selected_dot, = ax.plot([], [], 'ro', markersize=10)  # Kropka oznaczająca wybór
-
-
-
 
 plt.show()

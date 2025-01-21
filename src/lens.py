@@ -22,6 +22,8 @@ def create_lens(fixed_center_right, fixed_center_left, ax, width_r, lens_right: 
     lines_start = lens_right.center[0] - (max(abs(lens_right.width), abs(lens_left.width)) / 2)
     lines_length = lens_right.center[0] + (max(abs(lens_right.width), abs(lens_left.width)) / 2)
 
+    created_objects = []
+
     arc_right = patches.Arc(fixed_center_right, lens_right.width, lens_right.height, angle=lens_right.angle, theta1=lens_right.theta, theta2=lens_right.theta + lens_right.angle,
                        edgecolor='black', linewidth=2, facecolor='white')
 
@@ -31,42 +33,65 @@ def create_lens(fixed_center_right, fixed_center_left, ax, width_r, lens_right: 
     rectangle = patches.Rectangle(center_r, width_r, height_r,
                                   edgecolor='black', linewidth=2, facecolor='white')
 
-    lines = plt.hlines((line_right_height, line_left_height), lines_start, lines_length, colors='black', linestyles='solid',
+    lines = ax.hlines((line_right_height, line_left_height), lines_start, lines_length, colors='black', linestyles='solid',
                        linewidth=2)
+
+    created_objects.append(lines)
 
     arc_right.angle = 180
     arc_left.angle = 180
 
     if lens_right.radius > 0:
         ax.add_patch(arc_right)
+        created_objects.append(arc_right)
         if lens_left.radius > 0:
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius < 0:
             arc_left.angle = 360
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius == 0:
             line_left = plt.vlines(lines_start, line_right_height, line_left_height, colors='black', linestyles='solid',
                                    linewidth=2)
+            created_objects.append(line_left)
 
     elif lens_right.radius < 0:
         arc_right.angle = 360
         ax.add_patch(arc_right)
+        created_objects.append(arc_right)
         if lens_left.radius > 0:
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius < 0:
             arc_left.angle = 360
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius == 0:
             line_left = plt.vlines(lines_start, line_right_height, line_left_height, colors='black', linestyles='solid',
                                    linewidth=2)
+            created_objects.append(line_left)
 
     elif lens_right.radius == 0:
         line_right = plt.vlines(lines_length, line_right_height, line_left_height, colors='black', linestyles='solid')
+        created_objects.append(line_right)
         if lens_left.radius > 0:
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius < 0:
             arc_left.angle = 360
             ax.add_patch(arc_left)
+            created_objects.append(arc_left)
         elif lens_left.radius == 0:
             line_left = plt.vlines(lines_start, line_right_height, line_left_height, colors='black', linestyles='solid',
                                    linewidth=2)
+            created_objects.append(line_left)
+
+    return created_objects
+
+
+def delete_lens(ax, created_objects):
+    # Remove all created objects from the axes
+    for obj in created_objects:
+        obj.remove()
+    ax.figure.canvas.draw()  # Redraw the canvas to update the plot
