@@ -78,10 +78,10 @@ radio = RadioButtons(radio_ax, labels=list(MATERIALS.keys()))  # Utwórz RadioBu
 
 # Tworzenie pól tekstowych
 input_left_ax = plt.axes((0.9, 0.7, 0.05, 0.04))  # [x, y, width, height]
-input_left = TextBox(input_left_ax, 'Promień lewej soczewki: \n (Wartości 0<x<10  )', lens_left.radius, color='1',
+input_left = TextBox(input_left_ax, 'Promień lewej soczewki: \n (Wartości 0<x<10)  ', lens_left.radius, color='1',
                      hovercolor='0.9')
 input_right_ax = plt.axes((0.9, 0.62, 0.05, 0.04))  # [x, y, width, height]
-input_right = TextBox(input_right_ax, 'Promień prawej soczewki: \n (Wartości 0<x<10)', lens_right.radius, color='1',
+input_right = TextBox(input_right_ax, 'Promień prawej soczewki: \n (Wartości 0<x<10)  ', lens_right.radius, color='1',
                       hovercolor='0.9')
 
 
