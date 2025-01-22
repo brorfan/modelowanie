@@ -2,6 +2,7 @@ import numpy as np
 import sympy as sp
 
 from consts import n_Powietrze, MATERIALS
+from src.lens import Lens
 
 
 def normal_line_equation(a, b, x0, y0):
@@ -96,15 +97,15 @@ def remove_line(plot_elements):
         plot_elements['purple_end_line'] = None  # Reset the reference
 
 
-def redraw_line(fig, ax, y_value, fixed_center_left, fixed_center_right, radius_left, radius_right, plot_elements,
+def redraw_line(fig, ax, y_value, lens_left: Lens, lens_right: Lens, plot_elements,
                 radio_buttons):
     # PRAMATERES ---------------------------------
     hline = (0, y_value)  # Horizontal line equation
     selected_label = radio_buttons.value_selected
 
     # 1st Elipse parameters
-    x_01, y_01 = fixed_center_left[0], fixed_center_left[1]
-    a1, b1 = radius_left / 2, 5
+    x_01, y_01 = lens_left.center[0], lens_left.center[1]
+    a1, b1 = lens_left.radius / 2, 5
 
     # Get intersection points with the first ellipse
     points = intersection_with_ellipse(x_01, y_01, a1, b1, hline)
@@ -115,8 +116,8 @@ def redraw_line(fig, ax, y_value, fixed_center_left, fixed_center_right, radius_
     slope_1st_normal, b_1st_normal = normal_line_equation(a1, b1, point_x, point_y)
 
     # 2nd Elipse parameters
-    x_02, y_02 = fixed_center_right[0], fixed_center_right[1]
-    a2, b2 = radius_right / 2, 5
+    x_02, y_02 = lens_right.center[0], lens_right.center[1]
+    a2, b2 = lens_right.radius / 2, 5
 
     # Tilted line equation
     tilted_line_equation = tilted_line_eq(point_x, point_y, slope_1st_normal, n_Powietrze,
@@ -193,5 +194,6 @@ def intersection_with_ellipse(x_0, y_0, a, b, line):
     for sol_x in solutions_x:
         sol_y = m * sol_x + c
         points.append((sol_x, sol_y))
+    print(points)
 
     return points
